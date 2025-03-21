@@ -1,0 +1,167 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\cores\\rp2040"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\variants\\rpipico"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "si5351.h",
+    "Includepath": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Etherkit_Si5351\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "TinyGPS++.h",
+    "Includepath": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\TinyGPSPlus\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "RTClib.h",
+    "Includepath": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "Adafruit_I2CDevice.h",
+    "Includepath": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_BusIO"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "Adafruit_SSD1306.h",
+    "Includepath": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_SSD1306"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "Adafruit_GFX.h",
+    "Includepath": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "EEPROM.h",
+    "Includepath": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\libraries\\EEPROM\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\arduino\\sketches\\ACDABB78B84F65A3823F4774DD1E2A9C\\sketch\\wspr.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Etherkit_Si5351\\src\\si5351.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\TinyGPSPlus\\src\\TinyGPS++.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTC_DS1307.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTC_DS3231.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTC_Micros.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTC_Millis.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTC_PCF8523.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTC_PCF8563.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\RTClib\\src\\RTClib.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_GenericDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_SPIDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_SSD1306\\Adafruit_SSD1306.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\Adafruit_GFX.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\Adafruit_GrayOLED.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\Adafruit_SPITFT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "c:\\Users\\BH2VSQ\\Documents\\Arduino\\libraries\\Adafruit_GFX_Library\\glcdfont.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\BH2VSQ\\AppData\\Local\\Arduino15\\packages\\rp2040\\hardware\\rp2040\\4.5.1\\libraries\\EEPROM\\src\\EEPROM.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
