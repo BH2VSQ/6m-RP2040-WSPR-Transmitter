@@ -5,105 +5,142 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <JTEncode.h>
+#include <EEPROM.h>
+#include <Arduino.h>
 
-#define WSPR_SYMBOL_COUNT 162  // 明确宏定义
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
-
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 Si5351 si5351;
 TinyGPSPlus gps;
-SoftwareSerial gpsSerial(4, 5); // RX, TX
-JTEncode jtencode;  // 全局实例
+SoftwareSerial gpsSerial(4, 5); // RX, TX 连接 NEO-6M
 
-// WSPR配置
-uint32_t wspr_freq = 50294500;  // 50.2945 MHz
-const double WSPR_SHIFT[4] = {0.0, 1.4648, 2.9296, 4.3944};
-uint8_t wspr_symbols[WSPR_SYMBOL_COUNT];
-char callsign[7] = "KN4NLL";    // 最大6字符
-char maidenhead[5] = "FN31";    // 4字符网格
-const uint32_t wspr_interval = 120000;  // 120秒
+// WSPR 频率（单位：Hz）
+uint32_t wspr_freq = 50249500;
+uint32_t wspr_interval = 120000; // 120秒
+int8_t wspr_power = 27; // dBm 仅用于显示
+int wspr_calib = 0; // 频率校准（Hz）
+
+// FSK 频偏（单位：Hz）
+const int WSPR_SHIFT[4] = {0, 146, 292, 438};
+
+// 默认参数
+char maidenhead[7] = "BH2VSQ";
+char callsign[10] = "PN11";
+uint8_t wspr_symbols[162]; // 由 JTEncode 生成
+
+
+void saveConfig() {
+    EEPROM.put(0, callsign);
+    EEPROM.put(10, maidenhead);
+    EEPROM.put(20, wspr_freq);
+    EEPROM.put(24, wspr_interval);
+    EEPROM.put(28, wspr_power);
+    EEPROM.put(32, wspr_calib);
+    Serial.println("Config saved to EEPROM.");
+}
+
+void loadConfig() {
+    EEPROM.get(0, callsign);
+    EEPROM.get(10, maidenhead);
+    EEPROM.get(20, wspr_freq);
+    EEPROM.get(24, wspr_interval);
+    EEPROM.get(28, wspr_power);
+    EEPROM.get(32, wspr_calib);
+}
 
 void generate_wspr_symbols() {
     memset(wspr_symbols, 0, sizeof(wspr_symbols));
-    jtencode.wspr_encode(callsign, maidenhead, 27, wspr_symbols);
+    JTEncode jtencode;
+    jtencode.wspr_encode(callsign, maidenhead, wspr_power, wspr_symbols);
 }
 
 void setup() {
     Serial.begin(115200);
     gpsSerial.begin(9600);
+    EEPROM.begin(512);
+    loadConfig();
+
+    Serial.println("Initializing Si5351, GPS, and OLED...");
     
-    // OLED初始化
-    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-        Serial.println("OLED init failed");
-        while(1);
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println("SSD1306 allocation failed!");
+        while (1);
     }
     display.clearDisplay();
+    display.display();
     
-    // Si5351初始化
-    if(si5351.init(SI5351_CRYSTAL_LOAD_8PF, 25000000, 0)) {
-        Serial.println("Si5351 init failed");
-        while(1);
+    if (si5351.init(SI5351_CRYSTAL_LOAD_8PF, 25000000, 0)) {
+        Serial.println("Si5351 initialization failed!");
+        while (1);
     }
-    si5351.set_correction(0, static_cast<si5351_pll_input>(SI5351_PLLA));  // 根据实际校准值设置
     si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
-    
     generate_wspr_symbols();
 }
 
-void updateGPS() {
-    while (gpsSerial.available()) {
-        gps.encode(gpsSerial.read());
-    }
-    if (gps.location.isValid()) {
-        double lat = gps.location.lat();
-        double lon = gps.location.lng();
-        int lon_i = (lon + 180) / 20;
-        int lat_i = (lat + 90) / 10;
-        int lon_r = ((lon + 180) - lon_i * 20) / 2;
-        int lat_r = ((lat + 90) - lat_i * 10) / 1;
-        maidenhead[0] = 'A' + lon_i;
-        maidenhead[1] = 'A' + lat_i;
-        maidenhead[2] = '0' + lon_r;
-        maidenhead[3] = '0' + lat_r;
-        maidenhead[4] = '\0';
-        generate_wspr_symbols();
-    }
-}
+void processSerialCommand() {
+    if (Serial.available()) {
+        String command = Serial.readStringUntil('\n');
+        command.trim();
 
-void updateOLED() {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(0, 0);
-    display.print("Callsign: "); display.println(callsign);
-    display.print("Grid: "); display.println(maidenhead);
-    display.print("Freq: "); display.println(wspr_freq / 1000000.0, 6);
-    display.print("GPS: ");
-    if (gps.location.isValid()) {
-        display.println("LOCKED");
-    } else {
-        display.println("NO SIGNAL");
-    }
-    display.display();
-}
-
-void send_wspr() {
-    for(int i = 0; i < WSPR_SYMBOL_COUNT; i++) {
-        uint64_t freq_hz = wspr_freq + (uint32_t)(WSPR_SHIFT[wspr_symbols[i]] * 100);
-        si5351.set_freq(freq_hz * 100ULL, SI5351_CLK0);
-        delay(682);  // 精确的682ms符号持续时间
+        if (command.startsWith("SET CALLSIGN ")) {
+            command.substring(13).toCharArray(callsign, sizeof(callsign));
+            Serial.println("Callsign updated: " + String(callsign));
+            generate_wspr_symbols();
+        } else if (command.startsWith("SET GRID ")) {
+            command.substring(9).toCharArray(maidenhead, sizeof(maidenhead));
+            Serial.println("Grid updated: " + String(maidenhead));
+            generate_wspr_symbols();
+        } else if (command.startsWith("SET FREQ ")) {
+            wspr_freq = command.substring(9).toInt();
+            Serial.println("Frequency updated: " + String(wspr_freq));
+        } else if (command.startsWith("SET INTERVAL ")) {
+            wspr_interval = command.substring(13).toInt() * 60000;
+            Serial.println("Interval updated: " + String(wspr_interval / 60000) + " min");
+        } else if (command.startsWith("SET POWER ")) {
+            wspr_power = command.substring(10).toInt();
+            Serial.println("Power updated: " + String(wspr_power) + " dBm");
+            generate_wspr_symbols();
+        } else if (command.startsWith("SET CALIB ")) {
+            wspr_calib = command.substring(10).toInt();
+            Serial.println("Calibration updated: " + String(wspr_calib) + " Hz");
+        } else if (command == "SAVE") {
+            saveConfig();
+        } else if (command == "GET STATUS") {
+            Serial.println("Callsign: " + String(callsign));
+            Serial.println("Grid: " + String(maidenhead));
+            Serial.println("Freq: " + String(wspr_freq));
+            Serial.println("Interval: " + String(wspr_interval / 60000) + " min");
+            Serial.println("Power: " + String(wspr_power) + " dBm");
+            Serial.println("GPS: " + String(gps.location.isValid() ? "LOCKED" : "NO SIGNAL"));
+        } else if (command == "LIST CONFIG") {
+            Serial.println("Configuration Values:");
+            Serial.println("CALLSIGN: " + String(callsign));
+            Serial.println("GRID: " + String(maidenhead));
+            Serial.println("FREQ: " + String(wspr_freq));
+            Serial.println("INTERVAL: " + String(wspr_interval / 60000) + " min");
+            Serial.println("POWER: " + String(wspr_power) + " dBm");
+            Serial.println("CALIB: " + String(wspr_calib) + " Hz");
+        } else if (command == "HELP") {
+            Serial.println("Available commands:");
+            Serial.println("SET CALLSIGN <XX1XXX>");
+            Serial.println("SET GRID <FN31AA>");
+            Serial.println("SET FREQ <Hz>");
+            Serial.println("SET INTERVAL <minutes>");
+            Serial.println("SET POWER <dBm>");
+            Serial.println("SET CALIB <Hz>");
+            Serial.println("SAVE");
+            Serial.println("RESET");
+            Serial.println("GET STATUS");
+            Serial.println("LIST CONFIG");
+        } else {
+            Serial.println("Unknown command. Type HELP for a list of commands.");
+        }
     }
 }
 
 void loop() {
-    updateGPS();
-    updateOLED();
-    Serial.print("Current Grid Locator: ");
-    Serial.println(maidenhead);
-    Serial.println("Transmitting WSPR...");
-    send_wspr();
-    Serial.println("WSPR transmission complete. Waiting for next cycle...");
-    delay(wspr_interval);
+    processSerialCommand();
 }
