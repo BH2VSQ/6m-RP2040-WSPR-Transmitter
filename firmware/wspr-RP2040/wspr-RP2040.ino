@@ -1,3 +1,20 @@
+/*
+  WSPR 信标 (6m波段) - 基于 RP2040
+  硬件:
+  - RP2040
+  - Si5351 频率合成器 (I2C)
+  - NEO-6M GPS 模块 (UART)
+  - DS3231 实时时钟 (I2C)
+  - 0.96寸 OLED 屏幕 (I2C)
+  - EEPROM (用于存储配置参数)
+
+  接线:
+  - OLED (SSD1306) -> SDA (GP20), SCL (GP21)
+  - Si5351 -> SDA (GP20), SCL (GP21)
+  - NEO-6M -> RX (GP4), TX (GP5)
+  - EEPROM (内部存储)
+*/
+
 #include <Wire.h>
 #include <si5351.h>
 #include <TinyGPS++.h>
@@ -31,7 +48,6 @@ char maidenhead[7] = "BH2VSQ";
 char callsign[10] = "PN11";
 uint8_t wspr_symbols[162]; // 由 JTEncode 生成
 
-
 void saveConfig() {
     EEPROM.put(0, callsign);
     EEPROM.put(10, maidenhead);
@@ -39,6 +55,7 @@ void saveConfig() {
     EEPROM.put(24, wspr_interval);
     EEPROM.put(28, wspr_power);
     EEPROM.put(32, wspr_calib);
+    EEPROM.commit(); // 确保数据写入 EEPROM
     Serial.println("Config saved to EEPROM.");
 }
 
@@ -57,6 +74,20 @@ void generate_wspr_symbols() {
     jtencode.wspr_encode(callsign, maidenhead, wspr_power, wspr_symbols);
 }
 
+void updateDisplay() {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println("WSPR Beacon");
+    display.print("Call: "); display.println(callsign);
+    display.print("Grid: "); display.println(maidenhead);
+    display.print("Freq: "); display.print(wspr_freq / 1000000.0, 6); display.println(" MHz");
+    display.print("Power: "); display.print(wspr_power); display.println(" dBm");
+    display.print("GPS: "); display.println(gps.location.isValid() ? "LOCKED" : "NO SIGNAL");
+    display.display();
+}
+
 void setup() {
     Serial.begin(115200);
     gpsSerial.begin(9600);
@@ -69,8 +100,7 @@ void setup() {
         Serial.println("SSD1306 allocation failed!");
         while (1);
     }
-    display.clearDisplay();
-    display.display();
+    updateDisplay();
     
     if (si5351.init(SI5351_CRYSTAL_LOAD_8PF, 25000000, 0)) {
         Serial.println("Si5351 initialization failed!");
@@ -81,66 +111,39 @@ void setup() {
 }
 
 void processSerialCommand() {
-    if (Serial.available()) {
-        String command = Serial.readStringUntil('\n');
-        command.trim();
-
-        if (command.startsWith("SET CALLSIGN ")) {
-            command.substring(13).toCharArray(callsign, sizeof(callsign));
-            Serial.println("Callsign updated: " + String(callsign));
-            generate_wspr_symbols();
-        } else if (command.startsWith("SET GRID ")) {
-            command.substring(9).toCharArray(maidenhead, sizeof(maidenhead));
-            Serial.println("Grid updated: " + String(maidenhead));
-            generate_wspr_symbols();
-        } else if (command.startsWith("SET FREQ ")) {
-            wspr_freq = command.substring(9).toInt();
-            Serial.println("Frequency updated: " + String(wspr_freq));
-        } else if (command.startsWith("SET INTERVAL ")) {
-            wspr_interval = command.substring(13).toInt() * 60000;
-            Serial.println("Interval updated: " + String(wspr_interval / 60000) + " min");
-        } else if (command.startsWith("SET POWER ")) {
-            wspr_power = command.substring(10).toInt();
-            Serial.println("Power updated: " + String(wspr_power) + " dBm");
-            generate_wspr_symbols();
-        } else if (command.startsWith("SET CALIB ")) {
-            wspr_calib = command.substring(10).toInt();
-            Serial.println("Calibration updated: " + String(wspr_calib) + " Hz");
-        } else if (command == "SAVE") {
-            saveConfig();
-        } else if (command == "GET STATUS") {
-            Serial.println("Callsign: " + String(callsign));
-            Serial.println("Grid: " + String(maidenhead));
-            Serial.println("Freq: " + String(wspr_freq));
-            Serial.println("Interval: " + String(wspr_interval / 60000) + " min");
-            Serial.println("Power: " + String(wspr_power) + " dBm");
-            Serial.println("GPS: " + String(gps.location.isValid() ? "LOCKED" : "NO SIGNAL"));
-        } else if (command == "LIST CONFIG") {
-            Serial.println("Configuration Values:");
-            Serial.println("CALLSIGN: " + String(callsign));
-            Serial.println("GRID: " + String(maidenhead));
-            Serial.println("FREQ: " + String(wspr_freq));
-            Serial.println("INTERVAL: " + String(wspr_interval / 60000) + " min");
-            Serial.println("POWER: " + String(wspr_power) + " dBm");
-            Serial.println("CALIB: " + String(wspr_calib) + " Hz");
-        } else if (command == "HELP") {
-            Serial.println("Available commands:");
-            Serial.println("SET CALLSIGN <XX1XXX>");
-            Serial.println("SET GRID <FN31AA>");
-            Serial.println("SET FREQ <Hz>");
-            Serial.println("SET INTERVAL <minutes>");
-            Serial.println("SET POWER <dBm>");
-            Serial.println("SET CALIB <Hz>");
-            Serial.println("SAVE");
-            Serial.println("RESET");
-            Serial.println("GET STATUS");
-            Serial.println("LIST CONFIG");
-        } else {
-            Serial.println("Unknown command. Type HELP for a list of commands.");
-        }
+    Serial.print("WSPR> "); // 终端风格提示符
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command.length() == 0) return;
+    
+    if (command.startsWith("SET CALLSIGN ")) {
+        command.substring(13).toCharArray(callsign, sizeof(callsign));
+    } else if (command.startsWith("SET GRID ")) {
+        command.substring(9).toCharArray(maidenhead, sizeof(maidenhead));
+    } else if (command.startsWith("SET FREQ ")) {
+        wspr_freq = command.substring(9).toInt();
+    } else if (command.startsWith("SET INTERVAL ")) {
+        wspr_interval = command.substring(13).toInt();
+    } else if (command.startsWith("SET POWER ")) {
+        wspr_power = command.substring(10).toInt();
+    } else if (command.startsWith("SET CALIB ")) {
+        wspr_calib = command.substring(10).toInt();
+    } else if (command == "SAVE") {
+        saveConfig();
+    } else if (command == "GET STATUS") {
+        Serial.print("Callsign: "); Serial.println(callsign);
+        Serial.print("Grid: "); Serial.println(maidenhead);
+        Serial.print("Freq: "); Serial.print(wspr_freq / 1000000.0, 6); Serial.println(" MHz");
+        Serial.print("Power: "); Serial.print(wspr_power); Serial.println(" dBm");
+        Serial.print("GPS: "); Serial.println(gps.location.isValid() ? "LOCKED" : "NO SIGNAL");
+    } else {
+        Serial.println("Unknown command. Type HELP for available commands.");
     }
 }
 
 void loop() {
-    processSerialCommand();
+    if (Serial.available()) {
+        processSerialCommand();
+    }
+    updateDisplay();
 }

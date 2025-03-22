@@ -1,0 +1,50 @@
+<CONNECTED>
+
+     << AIC Pico >>
+ https://github.com/whowechina
+
+        SN: 0a00303131424b45
+        Built: Feb 22 2025 12:31:51
+
+Available commands:
+             ?: Display this help message.
+           fps: Display FPS.
+        update: Update firmware.
+       display: Display all settings.
+          save: Save config to flash.
+       factory: Reset everything to default.
+           nfc: NFC module.
+       virtual: Virtual AIC card.
+          mode: Reader mode/protocol.
+         light: Turn on/off lights.
+         level: Set light level.
+           lcd: Touch LCD settings.
+       autopin: Auto pin-entry.
+  pn5180_tweak: PN5180 TX tweak.
+         debug: Toggle debug.
+
+aic_pico>?
+
+     << AIC Pico >>
+ https://github.com/whowechina
+
+        SN: 0a00303131424b45
+        Built: Feb 22 2025 12:31:51
+
+Available commands:
+             ?: Display this help message.
+           fps: Display FPS.
+        update: Update firmware.
+       display: Display all settings.
+          save: Save config to flash.
+       factory: Reset everything to default.
+           nfc: NFC module.
+       virtual: Virtual AIC card.
+          mode: Reader mode/protocol.
+         light: Turn on/off lights.
+         level: Set light level.
+           lcd: Touch LCD settings.
+       autopin: Auto pin-entry.
+  pn5180_tweak: PN5180 TX tweak.
+         debug: Toggle debug.
+aic_pico>
