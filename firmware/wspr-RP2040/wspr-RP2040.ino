@@ -4,57 +4,52 @@
 #include <SoftwareSerial.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <JTEncode.h>
 
+#define WSPR_SYMBOL_COUNT 162  // 明确宏定义
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Si5351 si5351;
 TinyGPSPlus gps;
-SoftwareSerial gpsSerial(4, 5); // RX, TX 连接 NEO-6M
+SoftwareSerial gpsSerial(4, 5); // RX, TX
+JTEncode jtencode;  // 全局实例
 
-// WSPR 频率（单位：Hz）
-uint32_t wspr_freq = 50249500;
+// WSPR配置
+uint32_t wspr_freq = 50294500;  // 50.2945 MHz
+const double WSPR_SHIFT[4] = {0.0, 1.4648, 2.9296, 4.3944};
+uint8_t wspr_symbols[WSPR_SYMBOL_COUNT];
+char callsign[7] = "KN4NLL";    // 最大6字符
+char maidenhead[5] = "FN31";    // 4字符网格
+const uint32_t wspr_interval = 120000;  // 120秒
 
-// WSPR 符号（4-FSK 调制）
-const uint8_t wspr_symbols[162] = {3, 0, 1, 2, 3, 1, 2, 0, 3, 2, 1, 0, 3, 0, 2, 1,
-                                   0, 1, 3, 2, 1, 0, 3, 2, 1, 3, 0, 2, 1, 3, 0, 2,
-                                   3, 1, 2, 0, 3, 1, 0, 2, 3, 1, 2, 0, 3, 2, 1, 0,
-                                   3, 0, 2, 1, 0, 1, 3, 2, 1, 0, 3, 2, 1, 3, 0, 2,
-                                   1, 3, 0, 2, 3, 1, 2, 0, 3, 1, 0, 2, 3, 1, 2, 0,
-                                   3, 2, 1, 0, 3, 0, 2, 1, 0, 1, 3, 2, 1, 0, 3, 2,
-                                   1, 3, 0, 2, 1, 3, 0, 2, 3, 1, 2, 0, 3, 1, 0, 2,
-                                   3, 1, 2, 0, 3, 2, 1, 0, 3, 0, 2, 1, 0, 1, 3, 2,
-                                   1, 0, 3, 2, 1, 3, 0, 2, 1, 3, 0, 2, 3, 1, 2, 0,
-                                   3, 1, 0, 2, 3, 1, 2, 0, 3, 2, 1, 0, 3, 0, 2, 1,
-                                   0, 1, 3, 2, 1, 0};
-
-// FSK 频偏（单位：Hz）
-const int WSPR_SHIFT[4] = {0, 146, 292, 438};
-
-// 默认参数
-char maidenhead[7] = "FN31AA";
-char callsign[10] = "XX1XXX";
-uint32_t wspr_interval = 120000; // 120秒
+void generate_wspr_symbols() {
+    memset(wspr_symbols, 0, sizeof(wspr_symbols));
+    jtencode.wspr_encode(callsign, maidenhead, 27, wspr_symbols);
+}
 
 void setup() {
     Serial.begin(115200);
     gpsSerial.begin(9600);
-    Serial.println("Initializing Si5351, GPS, and OLED...");
     
-    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-        Serial.println("SSD1306 allocation failed!");
-        while (1);
+    // OLED初始化
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println("OLED init failed");
+        while(1);
     }
     display.clearDisplay();
-    display.display();
     
-    if (si5351.init(SI5351_CRYSTAL_LOAD_8PF, 25000000, 0)) {
-        Serial.println("Si5351 initialization failed!");
-        while (1);
+    // Si5351初始化
+    if(si5351.init(SI5351_CRYSTAL_LOAD_8PF, 25000000, 0)) {
+        Serial.println("Si5351 init failed");
+        while(1);
     }
+    si5351.set_correction(0, static_cast<si5351_pll_input>(SI5351_PLLA));  // 根据实际校准值设置
     si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
+    
+    generate_wspr_symbols();
 }
 
 void updateGPS() {
@@ -73,6 +68,7 @@ void updateGPS() {
         maidenhead[2] = '0' + lon_r;
         maidenhead[3] = '0' + lat_r;
         maidenhead[4] = '\0';
+        generate_wspr_symbols();
     }
 }
 
@@ -94,10 +90,10 @@ void updateOLED() {
 }
 
 void send_wspr() {
-    for (int i = 0; i < 162; i++) {
-        uint32_t freq = wspr_freq + WSPR_SHIFT[wspr_symbols[i]];
-        si5351.set_freq(freq * 100ULL, SI5351_CLK0);
-        delay(682);
+    for(int i = 0; i < WSPR_SYMBOL_COUNT; i++) {
+        uint64_t freq_hz = wspr_freq + (uint32_t)(WSPR_SHIFT[wspr_symbols[i]] * 100);
+        si5351.set_freq(freq_hz * 100ULL, SI5351_CLK0);
+        delay(682);  // 精确的682ms符号持续时间
     }
 }
 
